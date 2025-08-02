@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bulk Mail Sender</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    form {
+      border: 1px solid #ccc;
+      padding: 30px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <form id="emailForm" enctype="multipart/form-data">
+    <h2>Send Bulk Email</h2>
+
+    <label>Upload Excel File (Emails):</label>
+    <input type="file" name="excelFile" accept=".xlsx" required />
+
+    <label>Subject:</label>
+    <input type="text" name="subject" required />
+
+    <label>Message:</label>
+    <textarea name="message" rows="6" required></textarea>
+
+    <label>Resume (optional):</label>
+    <input type="file" name="resume" />
+
+    <label>Cover Letter (optional):</label>
+    <input type="file" name="coverLetter" />
+
+    <button type="submit">Send Emails</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('emailForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      const subject = formData.get("subject");
+      const message = formData.get("message");
+      const excelFile = formData.get("excelFile");
+
+      if (!subject || !message || !excelFile.name) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Required Fields Missing',
+          text: 'Please fill Subject, Message, and upload Excel file.',
+        });
+        return;
+      }
+
+      Swal.fire({
+        title: 'Sending Emails...',
+        text: 'Please wait while emails are being sent.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        const response = await fetch('/send-emails', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.text();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Emails sent successfully!',
+          });
+          form.reset();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to send',
+            text: result,
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message,
+        });
+      }
+    });
+  </script>
+</body>
+</html>
